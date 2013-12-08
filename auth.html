@@ -1,0 +1,86 @@
+<html>
+<head>
+<script src='firebase.js'></script>
+<script type='text/javascript' src='firebase-simple-login.js'></script>
+
+<script>
+
+var auth;
+
+var chatRef = new Firebase('https://raghunandangupta1992.firebaseIO.com');
+auth = new FirebaseSimpleLogin(chatRef, function(error, user) {
+
+  if (error) {
+    // an error occurred while attempting login
+    console.log(error);
+  } else if (user) {
+    // user authenticated with Firebase
+    console.log('User ID: ' + user.id + ', Provider: ' + user.provider);
+  } else {
+    // user is logged out
+	alert("loged Out");
+  }
+
+});
+
+function crt(email,password){
+
+	auth.createUser(email, password, function(error, user) {
+	  if (!error) {
+		console.log('User Id: ' + user.id + ', Email: ' + user.email);
+		alert("Done");
+	  }
+	});
+
+}
+
+function logIn(a,b){
+
+	auth.login('password', {
+	  email: a,
+	  password: b
+	});
+
+//alert(auth.provider);
+
+}
+
+function logOut()
+{
+	//alert(auth.id);
+	auth.logout();
+}
+
+//setTimeout('console.log("see: " + auth.id)',5000);
+
+function tellMe()
+{
+
+}
+
+
+</script>
+
+</head>
+
+<body>
+
+<input type="text" id="kk"	/>
+<input type="text" id="pa"	/>
+
+<input type="button" value="create" onclick="crt(kk.value,pa.value)"	/>
+<br><br>
+
+<input type="text" id="email1"	/>
+<input type="text" id="pass1"	/>
+<input type="submit" onclick="logIn(email1.value,pass1.value)"	/>
+
+<br><br>
+<input type="button" value="logout" onclick="logOut()"	/>
+
+<br><br>
+<input type="button" value="logout" onclick="tellMe()"	/>
+
+
+</body>
+</html>

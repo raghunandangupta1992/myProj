@@ -1,0 +1,49 @@
+<html>
+  <head>
+    <script src='https://cdn.firebase.com/v0/firebase.js'></script>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js'></script>
+  </head>
+  <body>
+    <div id='messagesDiv'></div>
+    <input type='text' id='nameInput' placeholder='Name'>
+    <input type='text' id='messageInput' placeholder='Message'>
+
+	   <script>
+	
+      var myDataRef = new Firebase('https://raghunandangupta1992.firebaseio.com/chat');
+      $('#messageInput').keypress(function (e) {
+        if (e.keyCode == 13) {
+          var name = $('#nameInput').val();
+          var text = $('#messageInput').val();
+          myDataRef.push({name: name, text: text});
+          $('#messageInput').val('');
+        }
+      });
+			// like :: onChildAdd -^
+		myDataRef.on('child_added', function(snapshot)	
+		{	
+			// snapshot contains => name , message		
+			
+			var message = snapshot.val();
+			displayChatMessage(message.name, message.text);
+		});
+    
+		// to display in HTML !!
+		function displayChatMessage(name, text)
+		{
+			$('<div/>').text(text).prepend($('<em/>').text(name+': ')).appendTo($('#messagesDiv'));
+			$('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
+			//var pp = https://raghunandangupta1992.firebaseio.com/.json;
+			//alert(pp);
+		};
+		
+		var dataRef = new Firebase('https://raghunandangupta1992.firebaseio.com/chat/-JAD4YJFjk3aJ-fw4AQa/name');
+		dataRef.on('value', function(snapshot)
+		{
+			alert(snapshot.val());
+		});
+		
+    </script>
+	
+  </body>
+</html>
