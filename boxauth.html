@@ -1,0 +1,170 @@
+<html>
+
+  <head>
+    <script src='firebase.js'></script>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js'></script>
+	<script type='text/javascript' src='firebase-simple-login.js'></script>
+  </head>
+  <body>
+    <div id='messagesDiv'></div>
+    <input type='text' id='nameInput' placeholder='Name'>
+    <input type='text' id='messageInput' placeholder='Message'>
+
+	   <script>
+
+	//var auth;
+	var myDataRef = new Firebase('https://raghunandangupta1992.firebaseio.com/chat');
+	  
+	  //onKeyPress -> 'ENTER'
+	  
+      $('#messageInput').keypress(function (e) {
+        if (e.keyCode == 13) {
+		console.log('inside ENTER');
+			
+			var auth = new FirebaseSimpleLogin(chatRef, function(error, user) 
+			{
+			  if (user) {
+				// user authenticated with Firebase
+				console.log('session active');
+				//return 1;
+				
+				  var name = $('#nameInput').val();
+				  var text = $('#messageInput').val();
+				  myDataRef.push({name: name, text: text});
+				  $('#messageInput').val('');
+				
+			  } 
+			  else {
+				// user is logged out
+				//alert("loged Out");
+				console.log("NO SESSIONS -< check >-");
+				//return 0;
+			  }
+			 });			
+		
+				//console.log('after check');
+			  
+		}
+      });
+			// like :: onChildAdd -^
+		myDataRef.on('child_added', function(snapshot)	
+		{	
+			// snapshot contains => name , message		
+			
+			var message = snapshot.val();
+			displayChatMessage(message.name, message.text);
+		});
+    
+		// to display in HTML !!
+		function displayChatMessage(name, text)
+		{
+			$('<div/>').text(text).prepend($('<em/>').text(name+': ')).appendTo($('#messagesDiv'));
+			$('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
+			//var pp = https://raghunandangupta1992.firebaseio.com/.json;
+			//alert(pp);
+		};
+		
+		var dataRef = new Firebase('https://raghunandangupta1992.firebaseio.com/chat/-JAD4YJFjk3aJ-fw4AQa/name');
+		dataRef.on('value', function(snapshot)
+		{
+			//alert(snapshot.val());
+		});
+
+
+//----------------------------Authentication-----------------------------		
+		
+		
+	var chatRef = new Firebase('https://raghunandangupta1992.firebaseIO.com');
+	
+	var auth = new FirebaseSimpleLogin(chatRef, function(error, user) {	
+		
+		if (error)
+		{
+			// an error occurred while attempting login
+			console.log(error);
+		} 
+		else if (user) 
+		{
+			// user authenticated with Firebase
+			console.log('User ID: ' + user.id + ', Provider: ' + user.provider);
+		} 
+		else 
+		{
+			// user is logged out
+			console.log('no sessions');
+		}
+	
+	});
+
+function crt(email,password){
+
+	auth.createUser(email, password, function(error, user) {
+	  if (!error) {
+		console.log('User Id: ' + user.id + ', Email: ' + user.email);
+		alert("Done");
+	  }
+	});
+
+}
+
+function logIn(a,b){
+
+	auth.login('password', {
+	  email: a,
+	  password: b
+	});
+
+//alert(auth.provider);
+
+}
+
+function logOut()
+{
+	//alert(auth.id);
+	auth.logout();
+}
+
+
+/*function check()
+{
+	auth = new FirebaseSimpleLogin(chatRef, function(error, user) 
+	{
+	  if (user) {
+		// user authenticated with Firebase
+		console.log('session active');
+		//return 1;
+	  } 
+	  else {
+		// user is logged out
+		//alert("loged Out");
+		console.log("NO SESSIONS -< check >-");
+		//return 0;
+	  }
+	 });
+}*/
+		
+//----------------------------Authentication-----------------------------		
+		
+    </script>
+	
+	<div style="position:absolute; right:200px;top:100px;">
+	<label>For New Users</label><br>
+	<input type="text" id="kk"	placeholder="Email : abc@pqr.com" />
+	<input type="password" id="pa"	placeholder="Password" />
+
+<input type="button" value="Create" onclick="crt(kk.value,pa.value)"	/>
+<br><br>
+
+<label>Login Users</label><br>	
+<input type="text" id="email1" placeholder="Your Email"	/>
+<input type="password" id="pass1" placeholder="Passwrod"	/>
+<input type="submit" onclick="logIn(email1.value,pass1.value)"	/>
+
+<br><br>
+<input type="button" value="logout" onclick="logOut()"	/>
+
+	
+	</div>
+	
+  </body>
+</html>
