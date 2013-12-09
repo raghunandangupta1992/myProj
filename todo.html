@@ -1,0 +1,193 @@
+<html>
+
+  <head>
+		<script src='firebase.js'></script>
+		<script src='jquery.min.js'></script>
+		<script type='text/javascript' src='firebase-simple-login.js'></script>
+  </head>
+  
+  <body>
+  
+  <script>
+  
+ var du = null;
+ var defaultRef = new Firebase('https://rgnew.firebaseIO.com/usr');
+ 
+ 
+ $(document).ready(function(){
+	
+	$( "#makeNote" ).click(function()
+	{
+		var noteName = $('#noteName').val();
+		var noteData = $('#noteData').val();
+		
+		var newNode = defaultRef.child(du.id);
+		newNode.push({name : noteName, message : noteData});
+		
+	});
+	
+ });
+ 
+ /*function makeDirectory()
+ {
+	var usroneRef = defaultRef.child(du.id);
+	usroneRef.set({email: du.email});
+ }*/
+ 
+ 
+ function passing(user)
+ {
+	du = user;
+	console.log("in DU: " + du);
+if(du != null){	
+ var myDataRef = new Firebase('https://rgnew.firebaseio.com/usr/' + du.id );
+  myDataRef.on('child_added', function(snapshot)	
+		{	
+			// snapshot contains => name , text		
+			
+			var message = snapshot.val();
+			displayChatMessage(message.name, message.message);
+		});
+}	
+	//alert(du);
+ }
+  
+//---------------------------------------- Authentication Starts ----------------------------------//
+
+ var chatRef = new Firebase('https://raghunandangupta1992.firebaseIO.com');
+
+	auth = new FirebaseSimpleLogin(chatRef, function(error, user) 
+	{
+		 
+			console.log('in main');
+			
+		  if (error) {
+			// an error occurred while attempting login
+			console.log(error);
+			passing(null);
+			
+		  } else if (user) {
+			// user authenticated with Firebase
+			passing(user);
+			console.log('User ID: ' + user.id + ', Provider: ' + user.provider + ', email: ' + user.email);
+			
+			//makeDirectory();
+
+			} else {
+			console.log('None Logged In');
+			passing(null);
+		  }
+	});
+	
+	$(document).ready(function(){
+
+		$( "#create" ).click(function()
+				  {
+					var email = $('#emailid').val();
+					var pass = $('#password').val();
+					auth.createUser(email,pass, function(error, user)
+					{
+					  if (!error) {
+						console.log('User Id: ' + user.id + ', Email: ' + user.email);
+						alert("Done");
+					  }
+					 });
+				  });
+
+		$( "#logOut" ).click(function()
+			 {
+				//console.log('LoggedOut now : '+ user.email);
+				console.log("in LOGout");
+				$('#messagesDiv').empty();
+				auth.logout();
+			 });
+		
+		$( "#logIn" ).click(function()
+		{
+			var a = $('#email1').val();
+			var b = $('#pass1').val();
+			
+			console.log('in logIn');
+			auth.login('password', {
+			  email: a,
+			  password: b
+			});
+			
+			//console.log('Logged IN : '+ user.email);	
+				// Uncaught TypeError: Cannot read property 'email' of null 
+			
+			// have to place 'console.log' after login action -> else NO user is active
+		});	 
+				  
+	});
+
+	
+
+  
+//---------------------------------------- Authentication ENDs ----------------------------------//
+  
+
+  
+  
+			// ------------------------ DATA PRINTING Start -----------------------------------
+
+ //var myDataRef = new Firebase('https://rgnew.firebaseio.com/usr/' + du.id );
+ 
+ 
+		// to display in HTML !!
+function displayChatMessage(name, text)
+{
+	
+	$('<div/>').text(text).prepend($('<em/>').text(name+': ')).appendTo($('#messagesDiv'));
+	$('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
+	
+};
+
+
+// ------------------------ DATA PRINTING END -----------------------------------
+
+  
+  
+  
+  
+  </script>
+
+	<div style="position:absolute; padding:5px; top:100px; right:550px; height:200px; border:solid black;">
+	
+		<input type="text" id="noteName"	placeholder="note name"	/><br>
+		<textarea id="noteData"	rows="4" cols="20" onclick="this.value=''" placeholder="Type your data here...."></textarea><br>
+		<input type="button" value="make a note"	id="makeNote"	/>
+		
+	</div>
+	
+	
+	<div style="position:absolute;padding:5px; top:100px; right:100px; height:300px; border:solid black;">
+			
+		<label>For New Users</label><br>
+		
+		<input type="email" id="emailid"	placeholder="abc@pqr.com" />
+		<input type="password" id="password" placeholder="password" />
+		<input type="button" id="create" value="create"	/>
+		<br><br>
+
+		<label>Login Users</label><br>	
+
+		
+		<input type="email" id="email1" 	placeholder="abc@pqr.com" />
+		<input type="password" id="pass1"	placeholder="password" />
+		<input type="button" value="login" id="logIn"	/>
+		
+		<center>		<br>
+		<input type="button" id="logOut" value="logout" style="width:75px; height:75px;font-size:20px;"	/>
+		</center>
+	</div>
+	
+	
+	
+	<div id='messagesDiv' style="position:absolute; top:10px;" ></div>	
+	
+  
+  
+  </body>
+  
+</html>

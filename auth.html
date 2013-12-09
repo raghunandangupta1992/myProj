@@ -1,63 +1,67 @@
 <html>
 <head>
 <script src='firebase.js'></script>
+<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js'></script>
 <script type='text/javascript' src='firebase-simple-login.js'></script>
 
 <script>
-
-var auth;
+//var user;
+//var auth = new FirebaseSimpleLogin(chatRef, function(error, user){	});
 
 var chatRef = new Firebase('https://raghunandangupta1992.firebaseIO.com');
-auth = new FirebaseSimpleLogin(chatRef, function(error, user) {
 
-  if (error) {
-    // an error occurred while attempting login
-    console.log(error);
-  } else if (user) {
-    // user authenticated with Firebase
-    console.log('User ID: ' + user.id + ', Provider: ' + user.provider);
-  } else {
-    // user is logged out
-	alert("loged Out");
-  }
+	auth = new FirebaseSimpleLogin(chatRef, function(error, user) 
+	{
+		  if (error) {
+			// an error occurred while attempting login
+			console.log(error);
+		  } else if (user) {
+			// user authenticated with Firebase
+			console.log('User ID: ' + user.id + ', Provider: ' + user.provider + ', email: ' + user.email);
+		  } else {
+			
+			console.log('None Logged In');
+		  }
+		  
+	$(document).ready(function(){
 
+		$( "#create" ).click(function()
+				  {
+					var email = $('#emailid').val();
+					var pass = $('#password').val();
+					auth.createUser(email,pass, function(error, user)
+					{
+					  if (!error) {
+						console.log('User Id: ' + user.id + ', Email: ' + user.email);
+						alert("Done");
+					  }
+					 });
+				  });
+
+		$( "#logOut" ).click(function()
+			 {
+				console.log('LoggedOut now : '+ user.email);
+				auth.logout();
+			 });
+		
+		$( "#logIn" ).click(function()
+		{
+			var a = $('#email1').val();
+			var b = $('#pass1').val(); 
+			auth.login('password', {
+			  email: a,
+			  password: b
+			});
+			
+			console.log('Logged IN : '+ user.email);	
+				// Uncaught TypeError: Cannot read property 'email' of null 
+			
+			// have to place 'console.log' after login action -> else NO user is active
+		});	 
+				  
+	});
+	 
 });
-
-function crt(email,password){
-
-	auth.createUser(email, password, function(error, user) {
-	  if (!error) {
-		console.log('User Id: ' + user.id + ', Email: ' + user.email);
-		alert("Done");
-	  }
-	});
-
-}
-
-function logIn(a,b){
-
-	auth.login('password', {
-	  email: a,
-	  password: b
-	});
-
-//alert(auth.provider);
-
-}
-
-function logOut()
-{
-	//alert(auth.id);
-	auth.logout();
-}
-
-//setTimeout('console.log("see: " + auth.id)',5000);
-
-function tellMe()
-{
-
-}
-
 
 </script>
 
@@ -65,22 +69,23 @@ function tellMe()
 
 <body>
 
-<input type="text" id="kk"	/>
-<input type="text" id="pa"	/>
+<input type="text" id="emailid"	/>
+<input type="text" id="password"	/>
 
-<input type="button" value="create" onclick="crt(kk.value,pa.value)"	/>
+<input type="button" id="create" value="create"	/>
 <br><br>
 
 <input type="text" id="email1"	/>
 <input type="text" id="pass1"	/>
-<input type="submit" onclick="logIn(email1.value,pass1.value)"	/>
+<input type="button" value="login" id="logIn"	/>
 
 <br><br>
-<input type="button" value="logout" onclick="logOut()"	/>
+<input type="button" id="logOut" value="logout"	/>
 
 <br><br>
-<input type="button" value="logout" onclick="tellMe()"	/>
-
+<!--
+<input type="button" value="test" onclick="tellMe()"	/>
+-->
 
 </body>
 </html>
