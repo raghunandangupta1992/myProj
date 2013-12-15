@@ -4,57 +4,160 @@
 		<script src='firebase.js'></script>
 		<script src='jquery.min.js'></script>
 		<script type='text/javascript' src='firebase-simple-login.js'></script>
-  </head>
+		
+		<style>
+			p
+			{
+				display:inline-block;	margin-right:10px;
+			}
+			a
+			{
+				 display:inline-block;
+			}
+			
+		
+		</style>
+
+	</head>
   
   <body>
   
   <script>
-  
+ var friendSID;
+ var friendEmail;
+ 
  var du = null;
  var defaultRef = new Firebase('https://rgnew.firebaseIO.com/usr');
  
  
- $(document).ready(function(){
+$(document).ready(function(){
+     $('#noteId, #noteName, #noteData').val('');
 	
 	$( "#makeNote" ).click(function()
 	{
+		console.log('in MakeNote');
+		
 		var noteName = $('#noteName').val();
 		var noteData = $('#noteData').val();
+		var noteId = $('#noteId').val();
+		
+		if(noteId.indexOf('friend') != -1)
+		{
+				noteId = noteId.substring(noteId.indexOf('friend')+6,noteId.length);
+			
+				var newNode = defaultRef.child(friendSID);
+		
+                if (noteId) {
+					// search for noteID [exists or not] and Update 
+                    newNode.child(noteId).update({name : noteName, message : noteData});
+                }
+				else
+				{
+					alert("::"+noteId+"::");
+				}
+		
+		}
+		
+		else
+		{
 		
 		var newNode = defaultRef.child(du.id);
-		newNode.push({name : noteName, message : noteData});
+		
+		/*if(newNode.hasChild(noteId))
+		{	alert(1)	}*/
+		
+                if (noteId) {
+					// search for noteID [exists or not] and Update 
+                    newNode.child(noteId).update({name : noteName, message : noteData});
+                }
+                else {
+					// else make a new one
+                    newNode.push({name : noteName, message : noteData});
+					$('#noteId, #noteName, #noteData').val('');
+                    }
+		}
 		
 	});
 	
  });
  
- /*function makeDirectory()
- {
-	var usroneRef = defaultRef.child(du.id);
-	usroneRef.set({email: du.email});
- }*/
  
+ function friendSnap(fid,femail)
+ {
+	//alert(fid);
+			
+			
+		var myDataRef = new Firebase('https://rgnew.firebaseio.com/usr/' + fid);
+	 
+		function onSnapshot (snapshot)
+		{
+			console.log("running LOG-> @ friend");
+			
+			var id = snapshot.name();		// id -> Name of the NODE 
+			
+			if(id != 'friend' && id != 'shared')
+			{
+				var message = snapshot.val();	// The Message !!
+				displayFriendChatMessage(id, message.name, message.message,femail);
+			}
+			
+		}
+		myDataRef.on('child_added', onSnapshot);
+		myDataRef.on('child_changed', onSnapshot);
+	}	
+  
  
  function passing(user)
  {
 	du = user;
 	console.log("in DU: " + du);
-if(du != null){	
- var myDataRef = new Firebase('https://rgnew.firebaseio.com/usr/' + du.id );
-  myDataRef.on('child_added', function(snapshot)	
-		{	
-			// snapshot contains => name , text		
+	
+	if(du != null)
+	{
+		
+		var myDataRef = new Firebase('https://rgnew.firebaseio.com/usr/' + du.id );
+	 
+		function onSnapshot (snapshot)
+		{
+			console.log("running LOG-> @ parent");
 			
-			var message = snapshot.val();
-			displayChatMessage(message.name, message.message);
-		});
-}	
+			var id = snapshot.name();		// id -> Name of the NODE 
+			
+			if(id != 'friend' && id != 'shared')
+			{
+				var message = snapshot.val();	// The Message !!
+				displayChatMessage(id, message.name, message.message);
+			}
+			else
+			{				
+				snapshot.forEach(function(childSnapshot)
+				{
+				  // This code will be called twice.
+				  friendSID = childSnapshot.name();
+				  var childData = childSnapshot.val();				  
+				  
+					childSnapshot.forEach(function(chSnapshot)
+					{
+					  // This code will be called twice.
+					//  var name = chSnapshot.name();
+					  var chData = chSnapshot.val();
+					  friendEmail = chData.id;
+					});
+				});
+				
+				friendSnap(friendSID,friendEmail);						
+			}
+			
+		}
+		myDataRef.on('child_added', onSnapshot);
+		myDataRef.on('child_changed', onSnapshot);
+	}	
 	//alert(du);
- }
+}
   
 //---------------------------------------- Authentication Starts ----------------------------------//
 
- var chatRef = new Firebase('https://raghunandangupta1992.firebaseIO.com');
+ var chatRef = new Firebase('https://rgnew.firebaseIO.com');
 
 	auth = new FirebaseSimpleLogin(chatRef, function(error, user) 
 	{
@@ -122,7 +225,23 @@ if(du != null){
 	});
 
 	
+function sharing()
+{
 
+		var friendID = $('#shId').val();
+		
+			// making Friend node in FRIEND's zone
+		var shNode = defaultRef.child(friendID).child('friend').child(du.id);
+		
+			// making Friend node in MY zone
+		var myShNode = defaultRef.child(du.id).child('shared').child(friendID);
+		
+		shNode.push({id : du.email});
+		
+		myShNode.push({id : friendID});
+		
+		
+}
   
 //---------------------------------------- Authentication ENDs ----------------------------------//
   
@@ -135,33 +254,92 @@ if(du != null){
  
  
 		// to display in HTML !!
-function displayChatMessage(name, text)
+function displayFriendChatMessage(id, name, text, fid)
 {
+	id = 'friend' + id;
 	
-	$('<div/>').text(text).prepend($('<em/>').text(name+': ')).appendTo($('#messagesDiv'));
+    var $div = $('#' + id);
+
+	// if Message Do-Not Exist !! 
+	if (!$div.length)
+	{ 
+		$div = $('<div/>', {id: id}).appendTo($('#messagesDiv'));
+	}
+    
+	// if exist !!	 -> to make inner elements (<a> , <em> )
+
+	$div.empty().append(
+	
+			// append <a>
+    
+		$('<a/>', {href: '#'+id}).text(text).click(function(){
+		
+			// OnClick -> <a> Tag !! -> fill the <input> with these values 
+    
+			$('#noteName').val(name);
+            $('#noteData').val(text);
+            $('#noteId').val(id);
+        
+		})
+        ).prepend($('<em/>').text(name+': ')).prepend($('<b/>').text('shared via : '+ fid +' : '));
 	$('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
 	
-};
+}
+
+
+function displayChatMessage(id, name, text)
+{
+    var $div = $('#' + id);
+
+	// if Message Do-Not Exist !! 
+	if (!$div.length)
+	{ 
+		$div = $('<div/>', {id: id}).appendTo($('#messagesDiv'));
+	}
+    
+	// if exist !!	 -> to make inner elements (<a> , <em> )
+
+	$div.empty().append(
+	
+			// append <a>
+    
+		$('<a/>', {href: '#'+id}).text(text).click(function(){
+		
+			// OnClick -> <a> Tag !! -> fill the <input> with these values 
+    
+			$('#noteName').val(name);
+            $('#noteData').val(text);
+            $('#noteId').val(id);
+        
+		})
+        ).prepend($('<em/>').text(name+': '));
+	$('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
+	
+}
 
 
 // ------------------------ DATA PRINTING END -----------------------------------
 
   
-  
-  
+
   
   </script>
 
 	<div style="position:absolute; padding:5px; top:100px; right:550px; height:200px; border:solid black;">
 	
 		<input type="text" id="noteName"	placeholder="note name"	/><br>
-		<textarea id="noteData"	rows="4" cols="20" onclick="this.value=''" placeholder="Type your data here...."></textarea><br>
+		<textarea id="noteData"	rows="4" cols="20" placeholder="Type your data here...."></textarea><br>
+
+		<input type="text" readonly id="noteId"	value='' /><br>
+
 		<input type="button" value="make a note"	id="makeNote"	/>
+                <input type="reset" onclick="$('#noteId, #noteName, #noteData').val('')" />
 		
 	</div>
 	
 	
 	<div style="position:absolute;padding:5px; top:100px; right:100px; height:300px; border:solid black;">
+			
 			
 		<label>For New Users</label><br>
 		
@@ -176,10 +354,17 @@ function displayChatMessage(name, text)
 		<input type="email" id="email1" 	placeholder="abc@pqr.com" />
 		<input type="password" id="pass1"	placeholder="password" />
 		<input type="button" value="login" id="logIn"	/>
+		<br>		<br>
+		<label>Share</label><br>
+		
+		<input type="text" id="shId"	/>
+		<input type="button" value="share" id="shBt" onclick="sharing()"	/>
 		
 		<center>		<br>
 		<input type="button" id="logOut" value="logout" style="width:75px; height:75px;font-size:20px;"	/>
 		</center>
+		
+		
 	</div>
 	
 	
