@@ -23,8 +23,10 @@
   <body>
   
   <script>
+  
  var friendSID;
  var friendEmail;
+ var shNodeName;
  
  var du = null;
  var defaultRef = new Firebase('https://rgnew.firebaseIO.com/usr');
@@ -41,14 +43,19 @@ $(document).ready(function(){
 		var noteData = $('#noteData').val();
 		var noteId = $('#noteId').val();
 		
+		// if this node is a shared(friend's node)
 		if(noteId.indexOf('friend') != -1)
 		{
 				noteId = noteId.substring(noteId.indexOf('friend')+6,noteId.length);
-			
+			//alert(friendSID)
+				
+				//var dum = defaultRef.child(friend).
+				
 				var newNode = defaultRef.child(friendSID);
 		
                 if (noteId) {
 					// search for noteID [exists or not] and Update 
+					alert(1);
                     newNode.child(noteId).update({name : noteName, message : noteData});
                 }
 				else
@@ -82,20 +89,24 @@ $(document).ready(function(){
  });
  
  
- function friendSnap(fid,femail)
+ function friendSnap(fid,femail,shNodeName)
  {
 	//alert(fid);
-			
-			
-		var myDataRef = new Firebase('https://rgnew.firebaseio.com/usr/' + fid);
+			//alert(shNodeName);
+		//var x = shNodeName;
+		//alert(x);
+		var myDataRef = new Firebase('https://rgnew.firebaseio.com/usr/' + fid );
 	 
 		function onSnapshot (snapshot)
 		{
 			console.log("running LOG-> @ friend");
 			
 			var id = snapshot.name();		// id -> Name of the NODE 
+			//alert(id)
+			//if(id != 'friend' && id != 'shared' )
 			
-			if(id != 'friend' && id != 'shared')
+			// to print only Shared Nodes !!
+			if(id == shNodeName )	
 			{
 				var message = snapshot.val();	// The Message !!
 				displayFriendChatMessage(id, message.name, message.message,femail);
@@ -114,7 +125,6 @@ $(document).ready(function(){
 	
 	if(du != null)
 	{
-		
 		var myDataRef = new Firebase('https://rgnew.firebaseio.com/usr/' + du.id );
 	 
 		function onSnapshot (snapshot)
@@ -128,7 +138,7 @@ $(document).ready(function(){
 				var message = snapshot.val();	// The Message !!
 				displayChatMessage(id, message.name, message.message);
 			}
-			else
+			else if( id == 'friend')
 			{				
 				snapshot.forEach(function(childSnapshot)
 				{
@@ -139,13 +149,14 @@ $(document).ready(function(){
 					childSnapshot.forEach(function(chSnapshot)
 					{
 					  // This code will be called twice.
-					//  var name = chSnapshot.name();
+					  // var name = chSnapshot.name();
 					  var chData = chSnapshot.val();
 					  friendEmail = chData.id;
+					  shNodeName = chData.name;
 					});
-				});
-				
-				friendSnap(friendSID,friendEmail);						
+					
+				friendSnap(friendSID,friendEmail,shNodeName);
+				});					
 			}
 			
 		}
@@ -229,6 +240,7 @@ function sharing()
 {
 
 		var friendID = $('#shId').val();
+		var shareNode = $('#shNodeId').val();
 		
 			// making Friend node in FRIEND's zone
 		var shNode = defaultRef.child(friendID).child('friend').child(du.id);
@@ -236,7 +248,7 @@ function sharing()
 			// making Friend node in MY zone
 		var myShNode = defaultRef.child(du.id).child('shared').child(friendID);
 		
-		shNode.push({id : du.email});
+		shNode.push({name : shareNode, id : du.email});	// nodeName and Email passed to Friend.
 		
 		myShNode.push({id : friendID});
 		
@@ -310,6 +322,7 @@ function displayChatMessage(id, name, text)
 			$('#noteName').val(name);
             $('#noteData').val(text);
             $('#noteId').val(id);
+            $('#shNodeId').val(id);	// at sharing
         
 		})
         ).prepend($('<em/>').text(name+': '));
@@ -358,6 +371,7 @@ function displayChatMessage(id, name, text)
 		<label>Share</label><br>
 		
 		<input type="text" id="shId"	/>
+		<input type="text" readonly id="shNodeId"	/>
 		<input type="button" value="share" id="shBt" onclick="sharing()"	/>
 		
 		<center>		<br>
